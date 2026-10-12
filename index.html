@@ -1,0 +1,1405 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA | AI Holographic Assistant</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --cyan: #42efff;
+      --blue: #3288ff;
+      --purple: #8b5cff;
+      --green: #55ffbd;
+      --red: #ff657f;
+      --bg: #030712;
+      --panel: rgba(8, 23, 42, 0.78);
+      --line: rgba(66, 239, 255, 0.23);
+      --muted: #7899b9;
+      --white: #e8faff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--white);
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(0, 102, 180, .16), transparent 43%),
+        radial-gradient(ellipse at 10% 90%, rgba(35, 73, 180, .12), transparent 35%),
+        var(--bg);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(66,239,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(66,239,255,.035) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(to bottom, black, transparent 95%);
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1500px, 100%);
+      min-height: 100vh;
+      margin: auto;
+      padding: 24px;
+    }
+
+    /* HEADER */
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      transform: rotate(45deg);
+      box-shadow: 0 0 20px rgba(66,239,255,.18),
+                  inset 0 0 15px rgba(66,239,255,.1);
+    }
+
+    .brand-mark span {
+      font: 800 25px Orbitron, sans-serif;
+      transform: rotate(-45deg);
+    }
+
+    .brand-name {
+      font: 800 25px Orbitron, sans-serif;
+      letter-spacing: 5px;
+    }
+
+    .brand-subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .system-label {
+      color: var(--muted);
+      font: 11px Orbitron, sans-serif;
+      letter-spacing: 1.4px;
+    }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      background: rgba(8,23,42,.65);
+      font-size: 11px;
+    }
+
+    .connection-dot {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #ffbf55;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .connection-dot.online {
+      background: var(--green);
+    }
+
+    .connection-dot.offline {
+      background: var(--red);
+    }
+
+    /* MAIN GRID */
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) minmax(320px, 1.45fr) minmax(230px, 1fr);
+      gap: 18px;
+      align-items: stretch;
+      padding-top: 22px;
+    }
+
+    .panel {
+      position: relative;
+      min-width: 0;
+      padding: 19px;
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(11,30,53,.88), rgba(4,12,26,.84));
+      box-shadow: inset 0 0 30px rgba(25,125,180,.035);
+      overflow: hidden;
+    }
+
+    .panel::before,
+    .panel::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 2px;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .panel::before {
+      top: 0;
+      left: 0;
+    }
+
+    .panel::after {
+      right: 0;
+      bottom: 0;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 22px;
+      color: var(--cyan);
+      font: 600 11px Orbitron, sans-serif;
+      letter-spacing: 1.6px;
+    }
+
+    .tiny-tag {
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    /* LEFT PANEL */
+
+    .metric {
+      margin-bottom: 23px;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 9px;
+      color: #9ab6d2;
+      font-size: 12px;
+    }
+
+    .metric-value {
+      color: var(--white);
+      font-family: Orbitron, sans-serif;
+      font-size: 12px;
+    }
+
+    .bar {
+      height: 5px;
+      overflow: hidden;
+      background: rgba(120,153,185,.13);
+    }
+
+    .bar-fill {
+      width: 65%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--cyan));
+      box-shadow: 0 0 12px var(--cyan);
+      transition: width .4s ease;
+    }
+
+    .section-divider {
+      height: 1px;
+      margin: 24px 0;
+      background: var(--line);
+    }
+
+    .device-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .device-icon {
+      display: grid;
+      place-items: center;
+      width: 37px;
+      height: 37px;
+      border: 1px solid var(--line);
+      color: var(--cyan);
+      font-size: 19px;
+    }
+
+    .device-name {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .device-detail {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .command-form {
+      display: flex;
+      gap: 7px;
+      margin-top: 13px;
+    }
+
+    .command-input {
+      width: 100%;
+      min-width: 0;
+      padding: 12px 10px;
+      outline: none;
+      border: 1px solid var(--line);
+      color: var(--white);
+      background: rgba(1,8,19,.8);
+      font-size: 12px;
+    }
+
+    .command-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(66,239,255,.1);
+    }
+
+    .command-input::placeholder {
+      color: #587590;
+    }
+
+    .send-btn {
+      padding: 0 13px;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      background: rgba(66,239,255,.08);
+      font-size: 11px;
+    }
+
+    /* CENTER HOLOGRAM */
+
+    .core-panel {
+      display: flex;
+      min-height: 620px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 12px;
+      border: 1px solid rgba(66,239,255,.14);
+      background: radial-gradient(ellipse at center, rgba(0,126,196,.10), transparent 65%);
+    }
+
+    .core-heading {
+      text-align: center;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font: 11px Orbitron, sans-serif;
+      letter-spacing: 3px;
+    }
+
+    .core-heading h1 {
+      margin-top: 12px;
+      font: 600 clamp(23px, 2.4vw, 34px) Orbitron, sans-serif;
+      letter-spacing: 4px;
+      text-shadow: 0 0 22px rgba(66,239,255,.25);
+    }
+
+    .core-heading p {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 1.2px;
+    }
+
+    .hologram {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(340px, 78vw);
+      aspect-ratio: 1;
+      margin: 8px auto;
+      isolation: isolate;
+    }
+
+    .hologram::before {
+      content: "";
+      position: absolute;
+      inset: 15%;
+      border-radius: 50%;
+      background: rgba(0,174,255,.10);
+      filter: blur(35px);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .orbit {
+      position: absolute;
+      inset: 8%;
+      border: 1px solid rgba(66,239,255,.38);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(66,239,255,.08);
+      animation: spin 14s linear infinite;
+    }
+
+    .orbit.two {
+      inset: 17% 3%;
+      border-color: rgba(67,146,255,.65);
+      transform: rotateX(68deg);
+      animation: spin 10s linear infinite;
+    }
+
+    .orbit.three {
+      inset: 17% 3%;
+      border-color: rgba(139,92,255,.55);
+      transform: rotateY(68deg);
+      animation: spin-reverse 12s linear infinite;
+    }
+
+    .orbit.four {
+      inset: 1% 23%;
+      border-style: dashed;
+      border-color: rgba(66,239,255,.24);
+      animation: spin-reverse 22s linear infinite;
+    }
+
+    .orbit::before,
+    .orbit::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 18px 4px rgba(66,239,255,.5);
+    }
+
+    .orbit::before {
+      left: 5%;
+    }
+
+    .orbit::after {
+      right: 5%;
+      background: var(--purple);
+      box-shadow: 0 0 18px 4px rgba(139,92,255,.5);
+    }
+
+    .core {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 45%;
+      aspect-ratio: 1;
+      z-index: 2;
+      border-radius: 50%;
+      border: 1px solid rgba(110,249,255,.8);
+      background:
+        radial-gradient(circle at 36% 30%, rgba(172,255,255,.95), transparent 9%),
+        radial-gradient(circle at center, rgba(0,222,255,.7), rgba(0,90,185,.3) 40%, rgba(0,10,35,.95) 72%);
+      box-shadow:
+        0 0 20px rgba(66,239,255,.55),
+        0 0 60px rgba(0,164,255,.3),
+        inset 0 0 28px rgba(66,239,255,.4);
+      animation: core-breathe 3s ease-in-out infinite;
+    }
+
+    .core::before {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border: 1px solid rgba(200,255,255,.65);
+      border-radius: 50%;
+    }
+
+    .core::after {
+      content: "";
+      position: absolute;
+      inset: 25%;
+      border: 2px dashed rgba(66,239,255,.8);
+      border-radius: 50%;
+      animation: spin 7s linear infinite;
+    }
+
+    .core-letter {
+      z-index: 2;
+      font: 800 clamp(35px, 5vw, 57px) Orbitron, sans-serif;
+      color: #eaffff;
+      text-shadow: 0 0 15px var(--cyan), 0 0 40px var(--blue);
+    }
+
+    .core-state {
+      text-align: center;
+    }
+
+    .core-state strong {
+      display: block;
+      color: var(--cyan);
+      font: 600 12px Orbitron, sans-serif;
+      letter-spacing: 3px;
+    }
+
+    .core-state p {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .core-state.listening strong {
+      color: var(--green);
+      text-shadow: 0 0 12px var(--green);
+    }
+
+    .core-state.processing strong {
+      color: #ffce76;
+      text-shadow: 0 0 12px #ffce76;
+    }
+
+    .voice-zone {
+      width: 100%;
+      text-align: center;
+    }
+
+    .voice-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 210px;
+      padding: 15px 25px;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      background: linear-gradient(90deg, rgba(0,108,170,.18), rgba(0,220,255,.09));
+      font: 600 12px Orbitron, sans-serif;
+      letter-spacing: 2px;
+      transition: .25s;
+      box-shadow: 0 0 22px rgba(66,239,255,.09), inset 0 0 18px rgba(66,239,255,.05);
+    }
+
+    .voice-btn:hover {
+      color: #00121d;
+      background: var(--cyan);
+      box-shadow: 0 0 30px rgba(66,239,255,.35);
+    }
+
+    .voice-btn:disabled {
+      cursor: wait;
+      opacity: .55;
+    }
+
+    .mic-icon {
+      font-size: 18px;
+    }
+
+    .voice-hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    /* RIGHT PANEL */
+
+    .response-box {
+      min-height: 155px;
+      padding: 15px;
+      border-left: 2px solid var(--cyan);
+      background: rgba(0,12,27,.65);
+    }
+
+    .response-label {
+      margin-bottom: 12px;
+      color: var(--cyan);
+      font: 10px Orbitron, sans-serif;
+      letter-spacing: 1.5px;
+    }
+
+    .response-text {
+      color: #c7e3f4;
+      font-size: 12px;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .command-history {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-item {
+      padding: 11px 12px;
+      border: 1px solid rgba(66,239,255,.11);
+      background: rgba(0,12,27,.55);
+    }
+
+    .history-time {
+      margin-bottom: 7px;
+      color: var(--cyan);
+      font: 9px Orbitron, sans-serif;
+    }
+
+    .history-text {
+      color: #b5cce0;
+      font-size: 11px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .empty-history {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .clear-btn {
+      margin-top: 13px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: transparent;
+      font-size: 10px;
+    }
+
+    .clear-btn:hover {
+      color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    /* FOOTER */
+
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      padding: 15px 2px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .5px;
+    }
+
+    .footer-highlight {
+      color: var(--cyan);
+    }
+
+    /* ANIMATIONS */
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-reverse {
+      to { transform: rotate(-360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .4; transform: scale(.85); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    @keyframes core-breathe {
+      0%, 100% { transform: scale(.96); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 1050px) {
+      main {
+        grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.2fr);
+      }
+
+      .core-panel {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        min-height: 590px;
+      }
+
+      .left-panel {
+        grid-column: 1;
+      }
+
+      .right-panel {
+        grid-column: 2;
+      }
+
+      .hologram {
+        width: min(330px, 65vw);
+      }
+    }
+
+    @media (max-width: 650px) {
+      .app {
+        padding: 14px;
+      }
+
+      header {
+        align-items: flex-start;
+      }
+
+      .brand-name {
+        font-size: 20px;
+        letter-spacing: 3px;
+      }
+
+      .brand-subtitle {
+        font-size: 8px;
+        letter-spacing: 1px;
+      }
+
+      .brand-mark {
+        width: 36px;
+        height: 36px;
+      }
+
+      .brand-mark span {
+        font-size: 20px;
+      }
+
+      .system-label {
+        display: none;
+      }
+
+      .connection {
+        padding: 8px;
+        font-size: 9px;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .core-panel,
+      .left-panel,
+      .right-panel {
+        grid-column: 1;
+      }
+
+      .core-panel {
+        grid-row: 1;
+        min-height: 540px;
+      }
+
+      .left-panel {
+        grid-row: 2;
+      }
+
+      .right-panel {
+        grid-row: 3;
+      }
+
+      .hologram {
+        width: min(310px, 82vw);
+      }
+
+      footer {
+        font-size: 9px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header>
+      <div class="brand">
+        <div class="brand-mark"><span>A</span></div>
+        <div>
+          <div class="brand-name">AURA</div>
+          <div class="brand-subtitle">PERSONAL AI SYSTEM</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="system-label">HOLOGRAPHIC INTERFACE v2.0</div>
+        <div class="connection">
+          <span class="connection-dot" id="connectionDot"></span>
+          <span id="connectionText">CONNECTING...</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- LEFT: SYSTEM TELEMETRY -->
+      <section class="panel left-panel">
+        <div class="panel-title">
+          <span>SYSTEM TELEMETRY</span>
+          <span class="tiny-tag">LIVE</span>
+        </div>
+
+        <div class="metric">
+          <div class="metric-top">
+            <span>CORE ACTIVITY</span>
+            <span class="metric-value" id="coreActivityValue">ACTIVE</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill" id="coreActivityBar" style="width:65%"></div>
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-top">
+            <span>VOICE MODULE</span>
+            <span class="metric-value" id="voiceModuleValue">READY</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill" id="voiceModuleBar" style="width:90%"></div>
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-top">
+            <span>NETWORK LINK</span>
+            <span class="metric-value" id="networkValue">CHECKING</span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill" id="networkBar" style="width:45%"></div>
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="panel-title">
+          <span>DEVICE LINK</span>
+          <span class="tiny-tag">ADB</span>
+        </div>
+
+        <div class="device-status">
+          <div class="device-icon">▯</div>
+          <div>
+            <div class="device-name">ANDROID DEVICE</div>
+            <div class="device-detail" id="phoneStatus">Waiting for backend status</div>
+          </div>
+        </div>
+
+        <p class="small-note">
+          Phone-control availability depends on your existing Flask backend,
+          ADB setup and device connection.
+        </p>
+
+        <div class="section-divider"></div>
+
+        <div class="panel-title">
+          <span>DIRECT COMMAND</span>
+          <span class="tiny-tag">TEXT INPUT</span>
+        </div>
+
+        <p class="small-note">
+          Type a command and send it to AURA.
+        </p>
+
+        <form class="command-form" id="commandForm">
+          <input
+            class="command-input"
+            id="customCommand"
+            type="text"
+            placeholder="Enter a command..."
+            autocomplete="off"
+            required
+          >
+          <button class="send-btn" id="sendBtn" type="submit">SEND</button>
+        </form>
+      </section>
+
+      <!-- CENTER: HOLOGRAPHIC CORE -->
+      <section class="core-panel">
+        <div class="core-heading">
+          <div class="eyebrow">ARTIFICIAL INTELLIGENCE</div>
+          <h1>HOLOGRAPHIC CORE</h1>
+          <p>PERSONAL ASSISTANT • VOICE INTERFACE</p>
+        </div>
+
+        <div class="hologram" id="hologram">
+          <div class="orbit"></div>
+          <div class="orbit two"></div>
+          <div class="orbit three"></div>
+          <div class="orbit four"></div>
+
+          <div class="core" id="orb">
+            <span class="core-letter">A</span>
+          </div>
+        </div>
+
+        <div class="core-state" id="coreState">
+          <strong id="assistantStatus">SYSTEM INITIALIZING</strong>
+          <p id="assistantHint">Preparing AURA interface...</p>
+        </div>
+
+        <div class="voice-zone">
+          <button class="voice-btn" id="voiceBtn" type="button">
+            <span class="mic-icon">◉</span>
+            <span id="voiceBtnText">ACTIVATE VOICE</span>
+          </button>
+
+          <p class="voice-hint" id="wakeNote">
+            Press to start voice recognition.<br>
+            Microphone permission may be required.
+          </p>
+        </div>
+      </section>
+
+      <!-- RIGHT: AI RESPONSE -->
+      <section class="panel right-panel">
+        <div class="panel-title">
+          <span>AI RESPONSE</span>
+          <span class="tiny-tag">OUTPUT</span>
+        </div>
+
+        <div class="response-box">
+          <div class="response-label">AURA MESSAGE</div>
+          <div class="response-text" id="resultBox" aria-live="polite">
+            AURA interface is ready. Activate voice or enter a command.
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="panel-title">
+          <span>RECOGNIZED COMMAND</span>
+          <span class="tiny-tag">INPUT</span>
+        </div>
+
+        <div class="response-box">
+          <div class="response-label">LAST INPUT</div>
+          <div class="response-text" id="commandText">
+            No command received yet.
+          </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <div class="panel-title">
+          <span>ACTIVITY LOG</span>
+          <span class="tiny-tag">SESSION</span>
+        </div>
+
+        <div class="command-history" id="commandHistory">
+          <p class="empty-history">Your recent commands will appear here.</p>
+        </div>
+
+        <button class="clear-btn" id="clearHistoryBtn" type="button">
+          CLEAR HISTORY
+        </button>
+      </section>
+
+    </main>
+
+    <footer>
+      <span>AURA <span class="footer-highlight">AI INTERFACE</span></span>
+      <span>VOICE • SYSTEM • DEVICE CONTROL</span>
+      <span id="footerClock">LOCAL TIME --:--:--</span>
+    </footer>
+
+  </div>
+
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const voiceBtn = $("voiceBtn");
+const voiceBtnText = $("voiceBtnText");
+const coreState = $("coreState");
+const assistantStatus = $("assistantStatus");
+const assistantHint = $("assistantHint");
+const resultBox = $("resultBox");
+const commandText = $("commandText");
+const connectionDot = $("connectionDot");
+const connectionText = $("connectionText");
+const commandForm = $("commandForm");
+const customCommand = $("customCommand");
+const sendBtn = $("sendBtn");
+const wakeNote = $("wakeNote");
+const commandHistory = $("commandHistory");
+
+const coreActivityValue = $("coreActivityValue");
+const coreActivityBar = $("coreActivityBar");
+const voiceModuleValue = $("voiceModuleValue");
+const voiceModuleBar = $("voiceModuleBar");
+const networkValue = $("networkValue");
+const networkBar = $("networkBar");
+const phoneStatus = $("phoneStatus");
+
+const SpeechAPI =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+let recognition = null;
+let isListening = false;
+let isProcessing = false;
+let requestInProgress = false;
+let wakeModeEnabled = false;
+let waitingForCommand = false;
+let restartTimer = null;
+let historyItems = [];
+
+function setAssistantState(state, hint = "") {
+  assistantStatus.textContent = state;
+  assistantHint.textContent = hint;
+
+  coreState.classList.remove("listening", "processing");
+
+  if (state === "LISTENING") {
+    coreState.classList.add("listening");
+  } else if (state === "PROCESSING") {
+    coreState.classList.add("processing");
+  }
+
+  coreActivityValue.textContent =
+    state === "PROCESSING" ? "BUSY" :
+    state === "LISTENING" ? "LISTENING" : "ACTIVE";
+
+  coreActivityBar.style.width =
+    state === "PROCESSING" ? "95%" :
+    state === "LISTENING" ? "85%" : "65%";
+}
+
+function setConnection(online, message) {
+  connectionDot.classList.remove("online", "offline");
+  connectionDot.classList.add(online ? "online" : "offline");
+
+  connectionText.textContent = message;
+  networkValue.textContent = online ? "ONLINE" : "OFFLINE";
+  networkBar.style.width = online ? "100%" : "10%";
+}
+
+function addHistory(command, response) {
+  historyItems.unshift({
+    time: new Date().toLocaleTimeString(),
+    command,
+    response
+  });
+
+  historyItems = historyItems.slice(0, 5);
+  commandHistory.replaceChildren();
+
+  historyItems.forEach(item => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "history-item";
+
+    const time = document.createElement("div");
+    time.className = "history-time";
+    time.textContent = item.time;
+
+    const cmd = document.createElement("div");
+    cmd.className = "history-text";
+    cmd.textContent = "> " + item.command;
+
+    const answer = document.createElement("div");
+    answer.className = "history-text";
+    answer.style.marginTop = "6px";
+    answer.style.color = "#42efff";
+    answer.textContent = item.response;
+
+    wrapper.append(time, cmd, answer);
+    commandHistory.appendChild(wrapper);
+  });
+}
+
+function getResponseText(data) {
+  if (typeof data === "string") return data;
+
+  if (data && typeof data === "object") {
+    for (const key of ["message", "response", "reply", "result", "output"]) {
+      if (typeof data[key] === "string" && data[key].trim()) {
+        return data[key];
+      }
+    }
+    return JSON.stringify(data);
+  }
+
+  return "Command completed.";
+}
+
+function speak(text) {
+  if (!("speechSynthesis" in window) || !text) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(String(text));
+  utterance.lang = "en-IN";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function scheduleVoiceRestart(delay = 1200) {
+  clearTimeout(restartTimer);
+
+  if (!wakeModeEnabled) return;
+
+  restartTimer = setTimeout(() => {
+    if (
+      wakeModeEnabled &&
+      !isListening &&
+      !isProcessing &&
+      !requestInProgress
+    ) {
+      startVoice();
+    }
+  }, delay);
+}
+
+async function sendCommand(command, source = "TEXT") {
+  const cleanCommand = String(command || "").trim();
+
+  if (!cleanCommand || requestInProgress) return;
+
+  requestInProgress = true;
+  isProcessing = true;
+  clearTimeout(restartTimer);
+
+  commandText.textContent =
+    source === "VOICE"
+      ? "VOICE COMMAND: " + cleanCommand
+      : cleanCommand;
+
+  resultBox.textContent = "Sending command: " + cleanCommand;
+  setAssistantState("PROCESSING", "Sending command to the phone...");
+  sendBtn.disabled = true;
+  voiceBtn.disabled = true;
+
+  try {
+    const response = await fetch("/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command: cleanCommand }),
+      cache: "no-store"
+    });
+
+    const rawText = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = rawText;
+    }
+
+    const answer = getResponseText(data);
+
+    if (!response.ok || (data && data.success === false)) {
+      throw new Error(answer || "HTTP error " + response.status);
+    }
+
+    resultBox.textContent = answer;
+    addHistory(cleanCommand, answer);
+    setConnection(true, "BACKEND ONLINE");
+    setAssistantState("SYSTEM ONLINE", "Command executed.");
+    speak(answer);
+
+  } catch (error) {
+    console.error("AURA command error:", error);
+
+    resultBox.textContent = "Command failed: " + error.message;
+    setAssistantState("COMMAND ERROR", "Check Flask and ADB.");
+    setConnection(false, "BACKEND ERROR");
+
+  } finally {
+    requestInProgress = false;
+    isProcessing = false;
+    sendBtn.disabled = false;
+    voiceBtn.disabled = false;
+
+    if (wakeModeEnabled) {
+      voiceBtnText.textContent = "JARVIS MODE ACTIVE";
+      wakeNote.textContent = 'Ready for your next command.';
+      scheduleVoiceRestart(1800);
+    } else {
+      voiceBtnText.textContent = "ACTIVATE VOICE";
+    }
+  }
+}
+
+async function checkStatus() {
+  try {
+    const response = await fetch("/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("Status HTTP " + response.status);
+
+    const data = await response.json();
+    setConnection(true, "BACKEND ONLINE");
+
+    const connected = data.connected ??
+      data.phone_connected ??
+      data.device_connected ??
+      data.adb_connected ??
+      null;
+
+    phoneStatus.textContent =
+      typeof connected === "boolean"
+        ? connected ? "Device connected" : "Device not detected"
+        : "Backend reachable";
+
+  } catch (error) {
+    console.warn("Status check failed:", error.message);
+    setConnection(false, "BACKEND OFFLINE");
+    phoneStatus.textContent = "Waiting for backend";
+  }
+}
+
+function handleRecognizedText(text) {
+  const heard = String(text || "").trim();
+  if (!heard || isProcessing || requestInProgress) return;
+
+  commandText.textContent = "HEARD: " + heard;
+
+  const hasWakeWord = /\bjarvis\b/i.test(heard);
+  let command = heard;
+
+  if (waitingForCommand) {
+    command = heard.replace(/\bjarvis\b/ig, "").trim();
+    waitingForCommand = false;
+  } else if (hasWakeWord) {
+    command = heard.replace(/\bjarvis\b/ig, "").trim();
+
+    if (!command) {
+      waitingForCommand = true;
+      wakeNote.textContent = "JARVIS activated. Speak your command now.";
+      speak("Yes, I am listening.");
+      scheduleVoiceRestart(1000);
+      return;
+    }
+  }
+
+  if (!command) {
+    wakeNote.textContent = "No command detected. Please try again.";
+    scheduleVoiceRestart(1000);
+    return;
+  }
+
+  console.log("AURA VOICE COMMAND SENDING:", command);
+  wakeNote.textContent = "Executing: " + command;
+
+  if (recognition && isListening) {
+    try {
+      recognition.stop();
+    } catch (_) {}
+  }
+
+  sendCommand(command, "VOICE");
+}
+
+function startVoice() {
+  if (!SpeechAPI) {
+    resultBox.textContent =
+      "Speech recognition is unavailable. Open this page in Google Chrome.";
+    setAssistantState("VOICE UNAVAILABLE", "Use Google Chrome.");
+    return;
+  }
+
+  if (isListening || isProcessing || requestInProgress) return;
+
+  clearTimeout(restartTimer);
+
+  const currentRecognition = new SpeechAPI();
+  recognition = currentRecognition;
+
+  currentRecognition.lang = "en-IN";
+  currentRecognition.continuous = false;
+  currentRecognition.interimResults = true;
+  currentRecognition.maxAlternatives = 1;
+
+  let submitted = false;
+  let latestText = "";
+
+  currentRecognition.onstart = () => {
+    isListening = true;
+    voiceBtnText.textContent = "LISTENING...";
+    voiceModuleValue.textContent = "LISTENING";
+    voiceModuleBar.style.width = "100%";
+
+    setAssistantState(
+      "LISTENING",
+      waitingForCommand ? "Speak your command now." : "Listening for a command..."
+    );
+
+    wakeNote.textContent = "Speak clearly in English or Hinglish.";
+  };
+
+  currentRecognition.onresult = event => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const result = event.results[i];
+      const transcript = result[0].transcript.trim();
+
+      if (!transcript) continue;
+
+      latestText = transcript;
+
+      if (result.isFinal && !submitted) {
+        submitted = true;
+        handleRecognizedText(transcript);
+        return;
+      }
+    }
+
+    if (latestText && !submitted) {
+      commandText.textContent = "HEARD: " + latestText;
+    }
+  };
+
+  currentRecognition.onerror = event => {
+    console.warn("Speech recognition error:", event.error);
+    wakeNote.textContent = "Voice error: " + event.error;
+
+    if (
+      event.error === "not-allowed" ||
+      event.error === "service-not-allowed"
+    ) {
+      wakeModeEnabled = false;
+      waitingForCommand = false;
+      voiceBtnText.textContent = "ACTIVATE VOICE";
+      resultBox.textContent =
+        "Microphone blocked. Allow microphone permission in Chrome.";
+      setAssistantState("MICROPHONE BLOCKED", "Allow microphone access.");
+    }
+  };
+
+  currentRecognition.onend = () => {
+    if (recognition === currentRecognition) {
+      isListening = false;
+      voiceModuleValue.textContent = "READY";
+      voiceModuleBar.style.width = "90%";
+    }
+
+    // If no final result arrived, try the latest transcript once.
+    if (!submitted && latestText && !isProcessing && !requestInProgress) {
+      submitted = true;
+      handleRecognizedText(latestText);
+      return;
+    }
+
+    if (wakeModeEnabled && !isProcessing && !requestInProgress) {
+      scheduleVoiceRestart(waitingForCommand ? 700 : 1000);
+    } else if (!wakeModeEnabled && !isProcessing) {
+      voiceBtnText.textContent = "ACTIVATE VOICE";
+      setAssistantState("SYSTEM ONLINE", "Ready.");
+    }
+  };
+
+  try {
+    currentRecognition.start();
+  } catch (error) {
+    isListening = false;
+    console.error("Could not start voice recognition:", error);
+    wakeNote.textContent = "Could not start microphone: " + error.message;
+  }
+}
+
+voiceBtn.addEventListener("click", () => {
+  if (isProcessing || requestInProgress) return;
+
+  wakeModeEnabled = !wakeModeEnabled;
+
+  if (!wakeModeEnabled) {
+    waitingForCommand = false;
+    clearTimeout(restartTimer);
+
+    if (recognition && isListening) {
+      try { recognition.stop(); } catch (_) {}
+    }
+
+    voiceBtnText.textContent = "ACTIVATE VOICE";
+    wakeNote.textContent = "Voice mode is off.";
+    setAssistantState("SYSTEM ONLINE", "Voice mode disabled.");
+    return;
+  }
+
+  voiceBtnText.textContent = "STARTING VOICE...";
+  wakeNote.textContent = 'Voice mode active. Say "Open YouTube".';
+  startVoice();
+});
+
+commandForm.addEventListener("submit", event => {
+  event.preventDefault();
+
+  const command = customCommand.value.trim();
+  if (!command) return;
+
+  customCommand.value = "";
+  sendCommand(command, "TEXT");
+});
+
+$("clearHistoryBtn").addEventListener("click", () => {
+  historyItems = [];
+  commandHistory.replaceChildren();
+
+  const empty = document.createElement("p");
+  empty.className = "empty-history";
+  empty.textContent = "Your recent commands will appear here.";
+  commandHistory.appendChild(empty);
+});
+
+function updateClock() {
+  $("footerClock").textContent =
+    "LOCAL TIME " + new Date().toLocaleTimeString();
+}
+
+setAssistantState("SYSTEM ONLINE", "AURA interface initialized.");
+updateClock();
+setInterval(updateClock, 1000);
+checkStatus();
+setInterval(checkStatus, 5000);
+</script>
+
+</body>
+</html>

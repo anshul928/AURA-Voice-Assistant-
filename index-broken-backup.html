@@ -1,0 +1,255 @@
+
+<script>
+const voiceBtn = document.getElementById("voiceBtn");
+const orb = document.getElementById("orb");
+const assistantStatus = document.getElementById("assistantStatus");
+const assistantHint = document.getElementById("assistantHint");
+const resultBox = document.getElementById("resultBox");
+const commandText = document.getElementById("commandText");
+
+const SpeechAPI =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = null;
+let listeningEnabled = false;
+let recognitionRunning = false;
+let speaking = false;
+let commandArmed = false;
+let processing = false;
+
+function setStatus(title, hint, listening = false) {
+  assistantStatus.textContent = title;
+  assistantHint.textContent = hint;
+  orb.classList.toggle("listening", listening);
+}
+
+function startRecognition() {
+  if (
+    !recognition ||
+    !listeningEnabled ||
+    speaking ||
+    recognitionRunning
+  ) return;
+
+  try {
+    recognition.start();
+  } catch (error) {
+    // Browser may already be starting the microphone.
+  }
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!("speechSynthesis" in window)) {
+      resolve();
+      return;
+    }
+
+    speaking = true;
+    if (recognitionRunning && recognition) {
+      try { recognition.stop(); } catch {}
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-IN";
+    utterance.rate = 1;
+    utterance.pitch = 1.05;
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      speaking = false;
+      resolve();
+      startRecognition();
+    };
+
+    utterance.onend = finish;
+    utterance.onerror = finish;
+    window.speechSynthesis.speak(utterance);
+
+    setTimeout(finish, 6000);
+  });
+}
+
+function cleanCommand(text) {
+  let command = text.toLowerCase().trim();
+
+  // Basic Hinglish-to-supported-command mapping
+  if (/\b(youtube|you tube)\b/.test(command)) return "open youtube";
+  if (/\b(whatsapp|what's app|what app)\b/.test(command)) return "open whatsapp";
+  if (/\b(instagram|insta)\b/.test(command)) return "open instagram";
+  if (/\bgoogle\b/.test(command)) return "open google";
+  if (/\b(home|ghar)\b/.test(command)) return "home";
+  if (/\b(back|peeche)\b/.test(command)) return "back";
+  if (/\b(lock|phone lock)\b/.test(command)) return "lock phone";
+  if (/\b(unlock|phone unlock|wake up)\b/.test(command)) return "unlock phone";
+
+  return command;
+}
+
+async function sendCommand(command) {
+  command = cleanCommand(command);
+  if (!command || processing) return;
+
+  processing = true;
+  commandArmed = false;
+  commandText.textContent = command;
+  setStatus("Command procesSING...", "Please wait, Sir.");
+
+  try {
+    const response = await fetch("/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command })
+    });
+
+    const data = await response.json();
+
+    resultBox.textContent = data.message || "No response received.";
+    resultBox.className = data.success ? "result success" : "result error";
+
+    if (data.success) {
+      setStatus("Command complete, Sir.", "AURA is ready for next command .");
+      await speak(data.message || "Done, Sir.");
+    } else {
+      setStatus("Command is not complete.", "try again the Command .");
+      await speak("Sorry sir. " + (data.message || "Command failed."));
+    }
+  } catch (error) {
+    resultBox.textContent = "AURA server se connection nahi ho paaya.";
+    resultBox.className = "result error";
+    setStatus("Connection problem", "Check karein ki python app.py chal raha hai.");
+  } finally {
+    processing = false;
+    commandArmed = false;
+    if (listeningEnabled) {
+      setStatus("AURA active", "Call me AURA.", true);
+    }
+    startRecognition();
+  }
+}
+
+function handleTranscript(transcript) {
+  if (!listeningEnabled || speaking || processing) return;
+
+  const text = transcript.toLowerCase().trim();
+  console.log("AURA heard:", text);
+
+  // Wake word must be spoken first.
+  const wakeMatch = text.match(/\baura\b/i);
+
+  if (wakeMatch) {
+    const commandAfterWake = text
+      .replace(/\baura\b/i, "")
+      .replace(/^[\s,.-]+/, "")
+      .trim();
+
+    if (commandAfterWake) {
+      sendCommand(commandAfterWake);
+    } else {
+      commandArmed = true;
+      setStatus("Haan Sir,!", "Ab apni command boliye.", true);
+      speak("Haan sir,");
+    }
+    return;
+  }
+
+  // Accept the next phrase after saying only "AURA".
+  if (commandArmed) {
+    sendCommand(text);
+  }
+}
+
+function startVoice() {
+  if (!SpeechAPI) {
+    resultBox.textContent =
+      "Is browser me continuous voice recognition supported nahi hai. Latest Chrome try karein.";
+    resultBox.className = "result error";
+    return;
+  }
+
+  if (listeningEnabled) {
+    listeningEnabled = false;
+    commandArmed = false;
+    if (recognition) {
+      try { recognition.stop(); } catch {}
+    }
+    voiceBtn.textContent = "🎙 START VOICE";
+    setStatus("AURA paused hai", "CLICK TO THE BUTTON FOR Listening ..");
+    return;
+  }
+
+  recognition = new SpeechAPI();
+  recognition.lang = "en-IN";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    recognitionRunning = true;
+    setStatus("AURA active", "CALL ME AURA.", true);
+  };
+
+  recognition.onresult = event => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        handleTranscript(event.results[i][0].transcript);
+      }
+    }
+  };
+
+  recognition.onerror = event => {
+    console.log("Voice recognition:", event.error);
+
+    if (event.error === "not-allowed" ||
+        event.error === "service-not-allowed") {
+      listeningEnabled = false;
+      voiceBtn.textContent = "🎙 START VOICE";
+      setStatus("Microphone permission chahiye", "Browser settings me microphone allow karein.");
+    }
+  };
+
+  recognition.onend = () => {
+    recognitionRunning = false;
+    if (listeningEnabled && !speaking) {
+      setTimeout(startRecognition, 700);
+    }
+  };
+
+  listeningEnabled = true;
+  voiceBtn.textContent = "⏹ STOP LISTENING";
+  resultBox.textContent = "AURA LISTENING...: AURA.";
+  resultBox.className = "result";
+  startRecognition();
+}
+
+voiceBtn.addEventListener("click", startVoice);
+
+document.getElementById("commandForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = document.getElementById("customCommand");
+  const command = input.value.trim();
+  if (!command) return;
+  input.value = "";
+  sendCommand(command);
+});
+
+async function checkStatus() {
+  const dot = document.getElementById("connectionDot");
+  const label = document.getElementById("connectionText");
+
+  try {
+    const response = await fetch("/status");
+    const data = await response.json();
+    dot.className = "dot " + (data.connected ? "online" : "offline");
+    label.textContent = data.connected ? "Phone Connected" : "Phone Disconnected";
+  } catch {
+    dot.className = "dot offline";
+    label.textContent = "Server Unavailable";
+  }
+}
+
+checkStatus();
+</script>

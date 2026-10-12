@@ -1,0 +1,578 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA | Personal AI Assistant</title>
+
+<style>
+:root {
+  --bg: #080c16;
+  --panel: #101827;
+  --line: #24334a;
+  --cyan: #66dcff;
+  --text: #eef6ff;
+  --muted: #8da1bd;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 35%, #142642 0%, transparent 48%),
+    var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+button, input { font: inherit; }
+
+button { cursor: pointer; }
+
+.app {
+  width: min(100% - 28px, 1000px);
+  margin: auto;
+  padding: 24px 0 40px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #397ba1;
+  border-radius: 15px;
+  color: var(--cyan);
+  background: #10243a;
+  font-size: 23px;
+  box-shadow: 0 0 25px #1e91c322;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 5px;
+}
+
+.brand small {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #f0b74d;
+  border-radius: 50%;
+}
+
+.dot.online { background: #4ee6a2; }
+.dot.offline { background: #ff6b78; }
+
+.hero {
+  text-align: center;
+  padding: 42px 0 24px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.hero h2 {
+  font-size: clamp(27px, 5vw, 42px);
+  margin: 12px 0 8px;
+  font-weight: 600;
+}
+
+.hero p {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.orb-area {
+  display: grid;
+  place-items: center;
+  padding: 25px 0 20px;
+}
+
+.orb {
+  width: 174px;
+  height: 174px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  background:
+    radial-gradient(circle at 35% 30%, #a3f1ff 0%, #41bce8 8%,
+    #16629c 30%, #101b42 59%, #080c16 72%);
+  border: 1px solid #67dcff77;
+  box-shadow: 0 0 30px #27b9ff36,
+              inset 0 0 30px #60dfff22;
+  transition: .3s ease;
+}
+
+.orb::before, .orb::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px solid #5bd7ff38;
+  border-radius: 50%;
+  animation: rotate 12s linear infinite;
+}
+
+.orb::after {
+  inset: -23px;
+  border-style: dashed;
+  border-color: #7c86ff36;
+  animation-direction: reverse;
+  animation-duration: 20s;
+}
+
+.orb span {
+  font-size: 50px;
+  color: white;
+  text-shadow: 0 0 24px #a7f0ff;
+}
+
+.orb.listening {
+  animation: pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 60px #32caff77;
+}
+
+@keyframes rotate { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.055); }
+}
+
+.status {
+  text-align: center;
+  min-height: 56px;
+  padding: 10px;
+}
+
+.status strong {
+  display: block;
+  color: var(--cyan);
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.status span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.voice-wrap {
+  text-align: center;
+  margin: 12px 0 30px;
+}
+
+.voice-btn {
+  min-width: 220px;
+  padding: 16px 25px;
+  border: 1px solid #76ddff;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #1c9dd0, #2459a6);
+  color: white;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 30px #087cc333;
+  transition: .2s;
+}
+
+.voice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px #087cc355;
+}
+
+.voice-btn:disabled {
+  opacity: .65;
+  cursor: wait;
+  transform: none;
+}
+
+.voice-hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.card {
+  background: linear-gradient(145deg, #121d30, #0d1422);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.card-title {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.command-text {
+  font-size: 16px;
+  min-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+.result {
+  color: #d6e6fb;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.result.success { color: #65e8b1; }
+.result.error { color: #ff9ca8; }
+
+details {
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #0c1320;
+  overflow: hidden;
+}
+
+summary {
+  cursor: pointer;
+  padding: 19px;
+  color: #bdcde3;
+  font-size: 14px;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.manual-content { padding: 0 18px 20px; }
+
+.manual-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.manual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.manual-grid button, .send-btn {
+  padding: 12px;
+  border-radius: 11px;
+  border: 1px solid #2a3c55;
+  background: #142137;
+  color: #e3efff;
+}
+
+.manual-grid button:hover, .send-btn:hover {
+  border-color: var(--cyan);
+  background: #192d49;
+}
+
+.custom-command {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.custom-command input {
+  min-width: 0;
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #2a3c55;
+  border-radius: 11px;
+  background: #080e19;
+  color: white;
+  outline: none;
+}
+
+.custom-command input:focus { border-color: var(--cyan); }
+
+.footer {
+  text-align: center;
+  color: #62748f;
+  font-size: 11px;
+  margin-top: 25px;
+}
+
+@media (max-width: 520px) {
+  .app { width: min(100% - 22px, 1000px); }
+  .brand h1 { font-size: 20px; }
+  .connection { font-size: 10px; }
+  .orb { width: 145px; height: 145px; }
+  .manual-grid { grid-template-columns: 1fr 1fr; }
+  .card { padding: 16px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">✧</div>
+      <div>
+        <h1>AURA</h1>
+        <small>PERSONAL AI ASSISTANT</small>
+      </div>
+    </div>
+
+    <div class="connection">
+      <span class="dot" id="connectionDot"></span>
+      <span id="connectionText">Checking phone...</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Your personal assistant</div>
+      <h2>Namaste, Sir.</h2>
+      <p>I`M AURA .<br>
+      YOUR PHONE ASSISTANT, ALWAYS I`m READY FOR YOU.</p>
+    </section>
+
+    <div class="orb-area">
+      <div class="orb" id="orb">
+        <span>✧</span>
+      </div>
+    </div>
+
+    <div class="status" aria-live="polite">
+      <strong id="assistantStatus">Ready when you are, Sir.</strong>
+      <span id="assistantHint">CLICK THE BUTTON GIVE THE COMMAND.</span>
+    </div>
+
+    <div class="voice-wrap">
+      <button class="voice-btn" id="voiceBtn" onclick="startVoice()">
+        🎙 START VOICE
+      </button>
+   
+    </div>
+
+    <section class="card">
+      <div class="card-title">Your command</div>
+      <div class="command-text" id="commandText">
+        THERE ARE NO COMMAND.
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">AURA response</div>
+      <div class="result" id="resultBox" aria-live="polite">
+        Haan sir, boliye. Main aapki madad ke liye ready hoon.
+      </div>
+    </section>
+
+    <details>
+      <summary>⚙ Advanced / Manual Controls</summary>
+      <div class="manual-content">
+        <div class="manual-note">
+          Voice command kaam na kare to yahan se manually command bhej sakte hain.
+        </div>
+
+        <div class="manual-grid">
+          <button onclick="sendCommand('open whatsapp')">WhatsApp</button>
+          <button onclick="sendCommand('open instagram')">Instagram</button>
+          <button onclick="sendCommand('open youtube')">YouTube</button>
+          <button onclick="sendCommand('open google')">Google</button>
+          <button onclick="sendCommand('home')">Home</button>
+          <button onclick="sendCommand('back')">Back</button>
+          <button onclick="sendCommand('lock phone')">Lock phone</button>
+          <button onclick="sendCommand('wake phone')">Wake phone</button>
+        </div>
+
+        <form class="custom-command" id="commandForm">
+          <input id="customCommand" maxlength="100"
+                 placeholder="Type a command..." autocomplete="off">
+          <button class="send-btn" type="submit">Send</button>
+        </form>
+      </div>
+    </details>
+  </main>
+
+  <footer class="footer">
+    AURA · Local Android Automation · Flask + ADB
+  </footer>
+</div>
+
+<script>
+const voiceBtn = document.getElementById("voiceBtn");
+const orb = document.getElementById("orb");
+const assistantStatus = document.getElementById("assistantStatus");
+const assistantHint = document.getElementById("assistantHint");
+const resultBox = document.getElementById("resultBox");
+const commandText = document.getElementById("commandText");
+
+let busy = false;
+
+function setStatus(title, hint, listening = false) {
+  assistantStatus.textContent = title;
+  assistantHint.textContent = hint;
+  orb.classList.toggle("listening", listening);
+}
+
+function speak(text) {
+  return new Promise(resolve => {
+    if (!("speechSynthesis" in window)) {
+      resolve();
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-IN";
+    utterance.rate = 1;
+    utterance.pitch = 1.05;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+
+    window.speechSynthesis.speak(utterance);
+    setTimeout(resolve, 2500);
+  });
+}
+
+async function sendCommand(command) {
+  command = String(command || "").trim();
+
+  if (!command) {
+    resultBox.textContent = "Pehle command enter kijiye, Sir.";
+    resultBox.className = "result error";
+    return;
+  }
+
+  commandText.textContent = command;
+  setStatus("Command process ho rahi hai...", "Please wait, Sir.");
+
+  try {
+    const response = await fetch("/command", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command })
+    });
+
+    const data = await response.json();
+
+    resultBox.textContent = data.message || "No response received.";
+    resultBox.className = data.success ? "result success" : "result error";
+
+    if (data.success) {
+      setStatus("Command complete, Sir.", "Aap aur command de sakte hain.");
+      await speak(data.message || "Done, Sir.");
+    } else {
+      setStatus("Command complete nahi hui.", "Please command check kijiye.");
+      await speak("Sorry sir, " + (data.message || "command failed"));
+    }
+  } catch (error) {
+    resultBox.textContent =
+      "AURA server se connection nahi ho paaya. Check karein ki python app.py chal raha hai.";
+    resultBox.className = "result error";
+    setStatus("Connection problem", "Server ko check kijiye.");
+  }
+}
+
+async function startVoice() {
+  if (busy) return;
+  busy = true;
+  voiceBtn.disabled = true;
+  voiceBtn.textContent = "● LISTENING...";
+  commandText.textContent = "Aapki command ka intezar hai...";
+  resultBox.className = "result";
+  resultBox.textContent = "Haan sir, boliye. Main sun raha hoon.";
+
+  try {
+    setStatus("Haan Sir, boliye — kya karun?", "Microphone ab command sunega.", true);
+    await speak("Haan sir, boliye. Kya karun?");
+
+    setStatus("Listening...", "Ab apni command boliye.", true);
+
+    const response = await fetch("/listen", { method: "POST" });
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.command) {
+      throw new Error(data.message || "Voice samajh nahi aayi. Dobara try karein.");
+    }
+
+    commandText.textContent = data.command;
+    setStatus("Command samajh aa gayi.", "Ab command execute kar raha hoon.");
+
+    await sendCommand(data.command);
+
+  } catch (error) {
+    resultBox.textContent = error.message || "Voice command failed.";
+    resultBox.className = "result error";
+    setStatus("Main dobara sunne ke liye ready hoon.", "Button dabakar phir try karein.");
+  } finally {
+    busy = false;
+    voiceBtn.disabled = false;
+    voiceBtn.textContent = "🎙 START VOICE";
+    orb.classList.remove("listening");
+  }
+}
+
+document.getElementById("commandForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = document.getElementById("customCommand");
+  const command = input.value.trim();
+  if (!command) return;
+  input.value = "";
+  sendCommand(command);
+});
+
+async function checkStatus() {
+  const dot = document.getElementById("connectionDot");
+  const label = document.getElementById("connectionText");
+
+  try {
+    const response = await fetch("/status");
+    const data = await response.json();
+
+    dot.className = "dot " + (data.connected ? "online" : "offline");
+    label.textContent = data.connected ? "Phone Connected" : "Phone Disconnected";
+  } catch {
+    dot.className = "dot offline";
+    label.textContent = "Server Unavailable";
+  }
+}
+
+checkStatus();
+</script>
+</body>
+</html>
